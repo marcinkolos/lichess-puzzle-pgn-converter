@@ -40,7 +40,7 @@ def save_to_pgn_file(df, file_path):
 
 def paginate_multiple(df, theme, page, page_size, how_many, file_path):
     for i in range(how_many):
-        save_to_pgn_file(paginate(filter_by_theme(df, theme), page + i, page_size), f'{file_path}{page}_part{(i + 1)}.pgn')
+        save_to_pgn_file(paginate(filter_by_theme(df, theme), page + i, page_size), f'{file_path}_part{(i + 1)}.pgn')
 
 def draw_GUI():
     root = Tk()
