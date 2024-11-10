@@ -45,16 +45,16 @@ def paginate_multiple(df, theme, page, page_size, how_many, file_path):
 def draw_GUI():
     root = Tk()
     root.title('Chess Puzzles')
-    root.geometry('500x500')
+    root.geometry('520x360')
     mainframe = ttk.Frame(root, padding="3 3 12 12")
     mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
     mainframe.columnconfigure(0, weight=1)
     mainframe.rowconfigure(0, weight=1)
 
-    ttk.Label(mainframe, text="csv file path").grid(column=2, row=1, sticky=(W, E))
+    ttk.Label(mainframe, text="CSV file path").grid(column=2, row=1, sticky=(W, E))
     
     input_path = StringVar()
-    input_path_entry = ttk.Entry(mainframe, width=50, textvariable=input_path)
+    input_path_entry = ttk.Entry(mainframe, width=70, textvariable=input_path)
     input_path_entry.grid(column=2, row=2, sticky=(W, E))
 
     def handle_openfiledialog(*args):
@@ -77,11 +77,11 @@ def draw_GUI():
 
     ttk.Button(mainframe, text="Open CSV", command=handle_opencsv).grid(column=2, row=4, sticky=W)
 
-    ttk.Label(mainframe, text="theme").grid(column=2, row=5, sticky=(W, E))
+    ttk.Label(mainframe, text="Select theme").grid(column=2, row=5, sticky=(W, E))
     # Create a dropdown (Combobox)
     selected_theme = StringVar()
     dropdown = ttk.Combobox(mainframe, textvariable=selected_theme)
-    dropdown.grid(column=2, row=6, padx=5, pady=5)
+    dropdown.grid(column=2, row=6, sticky=(W, E))
 
     def handle_savepgn(*args):
         try:
@@ -91,22 +91,22 @@ def draw_GUI():
         except ValueError:
             pass
 
-    ttk.Label(mainframe, text="how many positions in file").grid(column=2, row=7, sticky=(W, E))
+    ttk.Label(mainframe, text="How many positions in file").grid(column=2, row=7, sticky=(W, E))
     input_positions = IntVar()
     input_positions_entry = ttk.Entry(mainframe, textvariable=input_positions)
     input_positions_entry.grid(column=2, row=8, sticky=(W, E))
 
-    ttk.Label(mainframe, text="starting page").grid(column=2, row=9, sticky=(W, E))
+    ttk.Label(mainframe, text="Starting page").grid(column=2, row=9, sticky=(W, E))
     input_startpage = IntVar()
     input_startpage_entry = ttk.Entry(mainframe, textvariable=input_startpage)
     input_startpage_entry.grid(column=2, row=10, sticky=(W, E))
 
-    ttk.Label(mainframe, text="how many files to generate").grid(column=2, row=11, sticky=(W, E))
+    ttk.Label(mainframe, text="How many files to generate").grid(column=2, row=11, sticky=(W, E))
     input_filescount = IntVar()
     input_filescount_entry = ttk.Entry(mainframe, textvariable=input_filescount)
     input_filescount_entry.grid(column=2, row=12, sticky=(W, E))
 
-    ttk.Label(mainframe, text="file name template").grid(column=2, row=13, sticky=(W, E))
+    ttk.Label(mainframe, text="File name template").grid(column=2, row=13, sticky=(W, E))
     input_filesname = StringVar()
     input_filesname_entry = ttk.Entry(mainframe, textvariable=input_filesname)
     input_filesname_entry.grid(column=2, row=14, sticky=(W, E))
@@ -119,7 +119,7 @@ def draw_GUI():
 
     ttk.Button(mainframe, text="Browse...", command=handle_savefiledialog).grid(column=3, row=14, sticky=W)
 
-    ttk.Button(mainframe, text="save pgn", command=handle_savepgn).grid(column=2, row=16, sticky=W)
+    ttk.Button(mainframe, text="Save PGN", command=handle_savepgn).grid(column=2, row=16, sticky=W)
 
     root.mainloop()
 
