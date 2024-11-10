@@ -1,2 +1,2 @@
-chess=1.11.1
-pandas=2.2.3
+chess==1.11.1
+pandas==2.2.3
