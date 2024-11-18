@@ -1,10 +1,13 @@
 import chess
 import chess.pgn
 import pandas as pd
+import os
 from tkinter import *
 from tkinter import messagebox, filedialog, ttk
 
 csv = None
+theme_set = None
+theme_dictionary = {}
 
 def position_to_pgn(fen, moves_string, event):
     game = chess.pgn.Game()
@@ -21,8 +24,21 @@ def read_csv(file_path):
     return df
 
 def read_themes(df):
-    themes_set = set(word for themes in df['Themes'] for word in themes.split())
-    return list(themes_set)
+    global theme_set
+    global theme_dictionary
+    theme_dictionary.clear()
+    theme_set = sorted(set(word for themes in df['Themes'] for word in themes.split()))
+    for theme in theme_set:
+        theme_dictionary.update({theme: theme})
+    return theme_dictionary
+
+def count_theme_occurrences(df):
+    global theme_set
+    global theme_dictionary
+    theme_dictionary.clear()
+    for theme in theme_set:
+        theme_dictionary.update({f'{theme} ({"{:,}".format(len(filter_by_theme(df, theme)))})': theme})
+    return theme_dictionary
 
 def filter_by_theme(df, theme):
     return df[df['Themes'].str.contains(theme)]
@@ -37,8 +53,9 @@ def save_to_pgn_file(df, file_path):
             f.write(str(game) + '\n\n')
 
 def paginate_multiple(df, theme, page, page_size, how_many, file_path):
+    global theme_dictionary
     for i in range(how_many):
-        save_to_pgn_file(paginate(filter_by_theme(df, theme), page + i, page_size), f'{file_path}_part{(i + 1)}.pgn')
+        save_to_pgn_file(paginate(filter_by_theme(df, theme_dictionary[theme]), page, page_size), f'{file_path}_part{(i + 1)}.pgn')
 
 def draw_GUI():
     root = Tk()
@@ -66,49 +83,88 @@ def draw_GUI():
     def handle_opencsv(*args):
         try:
             global csv
+            file_path = input_path.get()
+            if not os.path.exists(file_path) or not os.path.isfile(file_path):
+                messagebox.showerror("Error", "File not found")
+                return
             csv = read_csv(input_path.get())
             themes = read_themes(csv)
-            dropdown['values'] = themes  # Set the options
+            dropdown['values'] = list(themes.keys())  # Set the options
+            selected_theme.set(list(themes.keys())[0])
+            button_savepgn.config(state='enabled')
             messagebox.showinfo("CSV loaded", "CSV loaded successfully")
         except ValueError:
+            messagebox.showerror("Error", "Something went wrong")
             pass
 
     ttk.Button(mainframe, text="Open CSV", command=handle_opencsv).grid(column=2, row=4, sticky=W)
 
-    ttk.Label(mainframe, text="Select theme").grid(column=2, row=5, sticky=(W, E))
-    # Create a dropdown (Combobox)
-    selected_theme = StringVar()
-    dropdown = ttk.Combobox(mainframe, textvariable=selected_theme)
-    dropdown.grid(column=2, row=6, sticky=(W, E))
-
-    def handle_savepgn(*args):
+    def handle_countthemes(*args):
         try:
-            global csv
-            paginate_multiple(csv, selected_theme.get(), input_startpage.get() + 1, 
-                              input_positions.get(), input_filescount.get(), input_filesname.get())
-            messagebox.showinfo("PGN saved", "PGN saved successfully")
+            theme_occurrences = count_theme_occurrences(csv)
+            dropdown['values'] = list(theme_occurrences.keys())  # Set the options
+            selected_theme.set(list(theme_occurrences.keys())[0])
         except ValueError:
             pass
 
-    ttk.Label(mainframe, text="How many positions in file").grid(column=2, row=7, sticky=(W, E))
-    input_positions = IntVar()
-    input_positions_entry = ttk.Entry(mainframe, textvariable=input_positions)
-    input_positions_entry.grid(column=2, row=8, sticky=(W, E))
+    ttk.Button(mainframe, text="Count themes", command=handle_countthemes).grid(column=2, row=5, sticky=W)
 
-    ttk.Label(mainframe, text="Starting page").grid(column=2, row=9, sticky=(W, E))
-    input_startpage = IntVar()
-    input_startpage_entry = ttk.Entry(mainframe, textvariable=input_startpage)
-    input_startpage_entry.grid(column=2, row=10, sticky=(W, E))
+    ttk.Label(mainframe, text="Select theme").grid(column=2, row=6, sticky=(W, E))
+    # Create a dropdown (Combobox)
+    selected_theme = StringVar()
+    dropdown = ttk.Combobox(
+        mainframe, 
+        textvariable=selected_theme,
+        state="readonly"
+    )
+    dropdown.grid(column=2, row=7, sticky=(W, E))
 
-    ttk.Label(mainframe, text="How many files to generate").grid(column=2, row=11, sticky=(W, E))
-    input_filescount = IntVar()
-    input_filescount_entry = ttk.Entry(mainframe, textvariable=input_filescount)
-    input_filescount_entry.grid(column=2, row=12, sticky=(W, E))
+    def validate_positive_number(new_value):
+        """Allow only numeric input."""
+        if new_value == "" or (new_value.isdigit() and int(new_value) > 0):
+            return True
+        return False
 
-    ttk.Label(mainframe, text="File name template").grid(column=2, row=13, sticky=(W, E))
+    # Validate that only numbers can be entered
+    validate_cmd = root.register(validate_positive_number)
+
+    ttk.Label(mainframe, text="How many positions in file").grid(column=2, row=8, sticky=(W, E))
+    input_positions = IntVar(value=1)
+    input_positions_entry = ttk.Entry(
+        mainframe, 
+        textvariable=input_positions,
+        validate="key",  # Validate on key press
+        validatecommand=(validate_cmd, "%P"),  # Pass the new value
+    )
+    input_positions_entry.grid(column=2, row=9, sticky=(W, E))
+
+    ttk.Label(mainframe, text="Starting page").grid(column=2, row=10, sticky=(W, E))
+    input_startpage = IntVar(value=1)
+    input_startpage_entry = ttk.Entry(
+        mainframe,
+        textvariable=input_startpage,
+        validate="key",  # Validate on key press
+        validatecommand=(validate_cmd, "%P"),  # Pass the new value
+    )
+    input_startpage_entry.grid(column=2, row=11, sticky=(W, E))
+
+    ttk.Label(mainframe, text="How many files to generate").grid(column=2, row=12, sticky=(W, E))
+    input_filescount = IntVar(value=1)
+    input_filescount_entry = ttk.Entry(
+        mainframe, 
+        textvariable=input_filescount,
+        validate="key",  # Validate on key press
+        validatecommand=(validate_cmd, "%P"),  # Pass the new value
+    )
+    input_filescount_entry.grid(column=2, row=13, sticky=(W, E))
+
+    ttk.Label(mainframe, text="File name template").grid(column=2, row=14, sticky=(W, E))
     input_filesname = StringVar()
-    input_filesname_entry = ttk.Entry(mainframe, textvariable=input_filesname)
-    input_filesname_entry.grid(column=2, row=14, sticky=(W, E))
+    input_filesname_entry = ttk.Entry(
+        mainframe, 
+        textvariable=input_filesname, 
+    )
+    input_filesname_entry.grid(column=2, row=15, sticky=(W, E))
 
     def handle_savefiledialog(*args):
         input_filesname.set(filedialog.asksaveasfilename(
@@ -116,9 +172,31 @@ def draw_GUI():
             filetypes=(("PGN files", "*.pgn"), ("All files", "*.*"))    
     ))
 
-    ttk.Button(mainframe, text="Browse...", command=handle_savefiledialog).grid(column=3, row=14, sticky=W)
+    ttk.Button(
+        mainframe, 
+        text="Browse...", 
+        command=handle_savefiledialog,
+    ).grid(column=3, row=15, sticky=W)
 
-    ttk.Button(mainframe, text="Save PGN", command=handle_savepgn).grid(column=2, row=16, sticky=W)
+    def handle_savepgn(*args):
+        try:
+            global csv
+            if input_filesname.get() == '': 
+                messagebox.showerror("Error", "File name template is empty")
+                return
+            paginate_multiple(csv, selected_theme.get(), input_startpage.get() - 1, 
+                              input_positions.get(), input_filescount.get(), input_filesname.get())
+            messagebox.showinfo("PGN saved", "PGN saved successfully")
+        except ValueError:
+            pass
+
+    button_savepgn = ttk.Button(
+        mainframe, 
+        text="Save PGN", 
+        command=handle_savepgn,
+        state='disabled'
+    )
+    button_savepgn.grid(column=2, row=16, sticky=W)
 
     root.mainloop()
 
