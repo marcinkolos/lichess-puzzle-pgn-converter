@@ -2,9 +2,7 @@ import chess
 import chess.pgn
 import pandas as pd
 from tkinter import *
-from tkinter import messagebox
-from tkinter import filedialog
-from tkinter import ttk
+from tkinter import messagebox, filedialog, ttk
 
 csv = None
 
@@ -86,7 +84,8 @@ def draw_GUI():
     def handle_savepgn(*args):
         try:
             global csv
-            paginate_multiple(csv, selected_theme.get(), input_startpage.get() + 1, input_positions.get(), input_filescount.get(), input_filesname.get())
+            paginate_multiple(csv, selected_theme.get(), input_startpage.get() + 1, 
+                              input_positions.get(), input_filescount.get(), input_filesname.get())
             messagebox.showinfo("PGN saved", "PGN saved successfully")
         except ValueError:
             pass
