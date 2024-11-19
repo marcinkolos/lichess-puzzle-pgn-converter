@@ -37,6 +37,7 @@ def read_themes(df):
 
 def count_theme_occurrences(df):
     global theme_set, theme_dictionary, progress
+    progress = 0
     theme_dictionary.clear()
     theme_counts = df['Themes'].str.split().explode().value_counts()
     for i, theme in enumerate(theme_set):
@@ -272,7 +273,7 @@ def draw_GUI():
         while not stop_thread:
             progress_var.set(progress)
             value_label['text'] = str(progress_var.get()) + '%'
-            time.sleep(1)  # Update every second
+            time.sleep(0.5)  # Update every second
 
     threading.Thread(target=update_progress_bar, args=(progress_var,), daemon=True).start()
 
