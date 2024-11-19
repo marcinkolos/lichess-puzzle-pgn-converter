@@ -59,8 +59,9 @@ def save_to_pgn_file(df, file_path):
 
 def paginate_multiple(df, theme, page, page_size, how_many, file_path):
     global theme_dictionary, progress
+    filtered = filter_by_theme(df, theme_dictionary[theme])
     for i in range(how_many):
-        save_to_pgn_file(paginate(filter_by_theme(df, theme_dictionary[theme]), page, page_size), f'{file_path}_part{(i + 1)}.pgn')
+        save_to_pgn_file(paginate(filtered, page + i, page_size), f'{file_path}_part{(i + 1)}.pgn')
         progress = int((i/how_many) * 100)
 
 def draw_GUI():
