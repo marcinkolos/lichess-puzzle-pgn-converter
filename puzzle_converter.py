@@ -229,6 +229,7 @@ def draw_GUI():
 
     def handle_savepgn(*args):
         def task():
+            start = time.time()
             global progress
             try:
                 global csv
@@ -242,6 +243,7 @@ def draw_GUI():
                 pass
             finally:
                 progress = 100
+                print(f'Time elapsed: {time.time() - start} seconds')
 
         threading.Thread(target=task).start()
 
